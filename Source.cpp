@@ -1,3 +1,10 @@
+/*
+comments: The picture I have posted is basically what the output is looking like. It takes me 6 and half minutes to print the whole grid and still some grids are omitted
+due to the size,so if you want to know what the grid looks like, I highly recommend that you use the two benchmark files I have made and change the infile of scl and nodes to the name
+of the benchmark. And I will start working on the perturbation of the algorithm, which is either moving the cell to a random place or swap it with another cell. You can work on finding the total minimum length
+Any questions, please email me or message me
+*/
+
 #include <iostream>
 #include <iomanip> 
 #include <stdlib.h>
