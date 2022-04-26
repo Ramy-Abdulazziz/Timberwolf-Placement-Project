@@ -1,19 +1,13 @@
-/*
-Comments: The program is running fine, but for benchmark 1, the area of the rectangle is 5287680, and the total area of all blocks sum is
-4234097. Using pure random function is hard even to fit in all the blocks. When I was running it, only quarter of the blocks are fit in. The
-rest of the blocks could not find a place to settle.
-Function: Try place all the blocks randomly into a rectangle
-*/
-
-
 #include <iostream>
 #include <iomanip> 
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <time.h>
 #include <sstream>
 #include <fstream>
 #include <vector>
+#include <algorithm>
 using namespace std;
 
 //use to get the integer in a line of string,since the integers are stored in a vector
@@ -43,13 +37,43 @@ void extractIntegerWords(string str, vector<int>& num)
     }
 }
 
+//use to get the index of descending order of the elements in a vector
+void sortArr(vector<int> arr, int n, vector <int>& index)
+{
+
+    // Vector to store element
+    // with respective present index
+    vector<pair<int, int> > vp;
+
+    // Inserting element in pair vector
+    // to keep track of previous indexes
+    for (int i = 0; i < n; ++i) {
+        vp.push_back(make_pair(arr[i], i));
+    }
+
+    // Sorting pair vector
+    sort(vp.begin(), vp.end());
+
+    // Displaying sorted element
+    // with previous indexes
+    // corresponding to each element
+    //cout << "Element\t"
+       // << "index" << endl;
+    for (int i = 0; i < vp.size(); i++) {
+        //cout << vp[vp.size()-i-1].first << "\t"
+             //<< vp[vp.size()-i-1].second << endl;
+        index.push_back(vp[vp.size() - i - 1].second);
+    }
+}
+
 //The grid, the number of nodes, width and length of each block, number of rows and columns
-void initialize(vector<vector<string>>& grid, int numNodes, int numRow, int numColumn, vector<vector<int>> parameters) {
+void initialize(vector<vector<string>>& grid, int numNodes, int numRow, int numColumn, vector<vector<int>> parameters, vector<int> index) {
     int x_coor = 0, y_coor = 0;
     //use to check if the block can fit into the coordinate
     bool empty = false;
     //initialize loop control variable
     int j = 0, k = 0;
+    srand(time(0));
     //place every node
     for (int i = 0; i < numNodes; i++) {
         empty = false;
@@ -62,7 +86,7 @@ void initialize(vector<vector<string>>& grid, int numNodes, int numRow, int numC
             //since all cells have to be placed in the rows
             //and the row height is 16 units, i am assuming the 
             //upper side and bottom side have to touch the row boundary
-            for (j = 0; j < parameters[i][1]; j = j + 16)
+            for (j = 0; j < parameters[index[i]][1]; j = j + 16)
             {
                 //check if the cell will pop out of the rectangle by rows
                 if ((y_coor * 16 + j) >= numRow * 16)
@@ -71,7 +95,7 @@ void initialize(vector<vector<string>>& grid, int numNodes, int numRow, int numC
                     break;
                 }
                 //fit into the column
-                for (k = 0; k < parameters[i][0]; k++)
+                for (k = 0; k < parameters[index[i]][0]; k++)
                 {
                     //check if the cell will pop out of the rectangle by columns
                     if ((x_coor + k) >= numColumn)
@@ -80,7 +104,7 @@ void initialize(vector<vector<string>>& grid, int numNodes, int numRow, int numC
                         break;
                     }
                     //check if the unit is empty
-                    if (grid[y_coor * 16 + j][x_coor + k] != "0")
+                    if (grid[y_coor * 16 + j][x_coor + k] != "U")
                     {
                         empty = false;
                         break;
@@ -94,11 +118,11 @@ void initialize(vector<vector<string>>& grid, int numNodes, int numRow, int numC
         }
         //if portion area is empty such that the block can fit in
         //then all these units will be written the block's index
-        for (int j = 0; j < parameters[i][1]; j++)
+        for (int j = 0; j < parameters[index[i]][1]; j++)
         {
-            for (int k = 0; k < parameters[i][0]; k++)
+            for (int k = 0; k < parameters[index[i]][0]; k++)
             {
-                grid[y_coor * 16 + j][x_coor + k] = to_string(i);
+                grid[y_coor * 16 + j][x_coor + k] = to_string(index[i]);
             }
         }
     }
@@ -106,13 +130,16 @@ void initialize(vector<vector<string>>& grid, int numNodes, int numRow, int numC
 
 int main() {
     //read all the files
-    ifstream sclfile("ibm01.scl");
-    ifstream nodesfile("ibm01.nodes");
+    ifstream sclfile("mybenchmark.scl");
+    ifstream nodesfile("mybenchmark.nodes");
     ifstream wtsfile("ibm01.wts");
     ifstream plfile("ibm01.pl");
     ifstream netsfile("ibm01.nets");
     string line;
     vector <int> num;
+    vector <int> terminalWt;
+    vector <int> nodeWt;
+    vector <int> descendingIndex;
     int i = 0, numRow = 0, numSite = 0, numNode = 0, numTerminal = 0;
     /*
     read the scl file and get its number of rows and number of columns
@@ -145,7 +172,7 @@ int main() {
         vector <string> v1;
         for (int k = 0; k < numSite; k++)
         {
-            v1.push_back("0");
+            v1.push_back("U");
         };
         grid.push_back(v1);
     }
@@ -186,8 +213,25 @@ int main() {
         nodes.push_back(v2);
         v2.clear();
     }
+    for (int i = 0; i < 5; i++)
+    {
+        getline(wtsfile,line);
+    }
+    for (int i = 0; i < numTerminal; i++)
+    {
+        getline(wtsfile, line);
+        extractIntegerWords(line, terminalWt);
+    }
+    for (int i = 0; i < nodes.size(); i++)
+    {
+        getline(wtsfile, line);
+        extractIntegerWords(line, nodeWt);
+    }
+    //get the descending index of the nodes
+    sortArr(nodeWt, nodeWt.size(), descendingIndex);
+
     //initialize the grid
-    initialize(grid, nodes.size(), numRow, numSite, nodes);
+    initialize(grid, nodes.size(), numRow, numSite, nodes,descendingIndex);
     //print the grid
     for (int j = 0; j < numRow * 16; j++)
     {
@@ -199,3 +243,5 @@ int main() {
     }
 
 }
+
+
