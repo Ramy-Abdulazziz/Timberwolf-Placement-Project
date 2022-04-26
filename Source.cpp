@@ -4,6 +4,7 @@ due to the size,so if you want to know what the grid looks like, I highly recomm
 of the benchmark. And I will start working on the perturbation of the algorithm, which is either moving the cell to a random place or swap it with another cell.
 You can work on finding the total minimum length. Any questions, please email me or message me
 Description: This program initialize the placement by placing all the cells inside the given rectangle.
+Update: Now the program could do perturbation, just need to find the minimum length now
 */
 
 #include <iostream>
@@ -75,7 +76,7 @@ void sortArr(vector<int> arr, int n, vector <int>& index)
 }
 
 //The grid, the number of nodes, width and length of each block, number of rows and columns
-void initialize(vector<vector<string>>& grid, int numNodes, int numRow, int numColumn, vector<vector<int>> parameters, vector<int> index) {
+void initialize(vector<vector<string>>& grid, int numNodes, int numRow, int numColumn, vector<vector<int>> parameters, vector<int> index, vector<vector<float>> &coor, vector < vector<int>> &bot_left_coor) {
     int x_coor = 0, y_coor = 0;
     //use to check if the block can fit into the coordinate
     bool empty = false;
@@ -124,6 +125,11 @@ void initialize(vector<vector<string>>& grid, int numNodes, int numRow, int numC
                     break;
             }
         }
+        //get the center coordinate for every nodes
+        coor[index[i]][1] = float(y_coor*16) + float(parameters[index[i]][1]/2)-0.5;
+        coor[index[i]][0] = float(x_coor) + float(parameters[index[i]][0] / 2)-0.5;
+        bot_left_coor[index[i]][1] = y_coor * 16;
+        bot_left_coor[index[i]][0] = x_coor;
         //if portion area is empty such that the block can fit in
         //then all these units will be written the block's index
         for (int j = 0; j < parameters[index[i]][1]; j++)
@@ -136,6 +142,72 @@ void initialize(vector<vector<string>>& grid, int numNodes, int numRow, int numC
     }
 }
 
+void swap_cell(vector<vector<string>> &grid,vector<int> wts, vector<vector<int>> size,int numNodes,vector<vector<int>> coor) {
+    int index1, index2;
+    //swap two random nodes
+    index1 = rand() % numNodes;
+    index2 = rand() % numNodes;
+    //check if they are the same index and they have the same weights
+    while (!(index2 != index1 && wts[index2] == wts[index1]))
+    {
+        index2 = rand() % numNodes;
+    }
+    //swap two nodes
+    for (int i = 0; i < size[index1][1]; i++)
+    {
+        for (int j = 0; j < size[index1][0]; j++)
+        {
+            //swap two nodes
+            swap(grid[coor[index1][1]+i][coor[index1][0]+j], grid[coor[index2][1]+i][coor[index2][0]+j]);
+        }
+    }
+}
+
+void move_cell(vector<vector<string>> &grid,vector<vector<int>> size,int numNodes, int numRow, int numColumn, vector<vector<int>> coor) {
+    int x_coor = 0, y_coor = 0;
+    bool empty = false;
+    int index;
+    index = rand() / numNodes;
+    index = 22;
+    while (empty == false)
+    {
+        x_coor = rand() % numColumn;
+        y_coor = rand() % numRow;
+        for (int i = 0; i < size[index][1]; i = i + 16)
+        {
+            if ((y_coor * 16 + i) >= numRow * 16)
+            {
+                empty = false;
+                break;
+            }
+            for (int j = 0; j < size[index][0]; j++)
+            {
+                if ((x_coor + j) >= numColumn)
+                {
+                    empty = false;
+                    break;
+                }
+                if (!(grid[y_coor * 16 + i][x_coor + j] == "U" || grid[y_coor * 16 + i][x_coor + j] == to_string(index)))
+                {
+                    empty = false;
+                    break;
+                }
+                else
+                    empty = true;
+            }
+            if (empty == false)
+                break;
+        }
+    }
+        for (int i = 0; i < size[index][1]; i++)
+        {
+            for (int j = 0; j < size[index][0]; j++)
+            {
+                //place the block to a new place
+                swap(grid[y_coor*16+i][x_coor+j],grid[coor[index][1]+i][coor[index][0]+j]);
+            }
+        }
+}
 int main() {
     //read all the files
     ifstream sclfile("mybenchmark.scl");
@@ -148,6 +220,8 @@ int main() {
     vector <int> terminalWt;
     vector <int> nodeWt;
     vector <int> descendingIndex;
+    vector <vector<float>> center_coor;
+    vector <vector<int>> bot_left_coor;
     int i = 0, numRow = 0, numSite = 0, numNode = 0, numTerminal = 0;
     /*
     read the scl file and get its number of rows and number of columns
@@ -217,8 +291,17 @@ int main() {
     while (getline(nodesfile, line))
     {
         vector<int> v2;
+        vector<float> initial_Coor;
         extractIntegerWords(line, v2);
         nodes.push_back(v2);
+        v2.clear();
+        v2.push_back(0);
+        v2.push_back(0);
+        initial_Coor.push_back(0);
+        initial_Coor.push_back(0);
+        center_coor.push_back(initial_Coor);
+        bot_left_coor.push_back(v2);
+        initial_Coor.clear();
         v2.clear();
     }
     for (int i = 0; i < 5; i++)
@@ -239,7 +322,7 @@ int main() {
     sortArr(nodeWt, nodeWt.size(), descendingIndex);
 
     //initialize the grid
-    initialize(grid, nodes.size(), numRow, numSite, nodes,descendingIndex);
+    initialize(grid, nodes.size(), numRow, numSite, nodes,descendingIndex,center_coor,bot_left_coor);
     //print the grid
     for (int j = 0; j < numRow * 16; j++)
     {
@@ -249,7 +332,21 @@ int main() {
         }
         cout << "\n";
     }
+    //system("CLS");
+    //swap_cell(grid, nodeWt, nodes, numNode, bot_left_coor);
+    //move_cell(grid, nodes, numNode, numRow, numSite, bot_left_coor);
+   // for (int j = 0; j < numRow * 16; j++)
+  //  {
+   //     for (int k = 0; k < numSite; k++)
+   //     {
+   //         cout << grid[j][k] << " ";
+   //     }
+    //    cout << "\n";
+    //}
 
 }
+
+
+
 
 
