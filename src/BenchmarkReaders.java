@@ -48,10 +48,15 @@ public class BenchmarkReaders {
                 lineReader.next();
 
             }
+
+            reader.close();
+
         }catch(FileNotFoundException e){
             System.out.println("File location error");
             e.printStackTrace();
 
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 
