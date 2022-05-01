@@ -14,14 +14,13 @@ public class BenchmarkReaders {
                                     new InputStreamReader(
                                     new FileInputStream(filename), Charset.forName(StandardCharsets.UTF_8.name())));
 
-            Iterator<String> lineReader = reader.lines().iterator();
-            int lineCount = 0;
+            Iterator<String> lineReader = reader.lines().skip(7).iterator();
+            int lineCount = 7;
 
             while (lineReader.hasNext()) {
 
-                lineCount++;
 
-                if (lineCount == 6) {
+                if (lineCount++ == 7) {
 
                     String[] line = lineReader.next().split("\\s+");
                     int numNodes = Integer.parseInt(line[2]);
@@ -45,8 +44,6 @@ public class BenchmarkReaders {
 
                 }
 
-                lineReader.next();
-
             }
 
             reader.close();
@@ -60,12 +57,38 @@ public class BenchmarkReaders {
         }
     }
 
-    public static void readWts(String fileName){
+    public static void readWts(String fileName) {
 
+        try {
 
+            BufferedReader reader = new BufferedReader(
+                                    new InputStreamReader(
+                                    new FileInputStream(fileName), Charset.forName(StandardCharsets.UTF_8.name())));
 
+            reader.lines().skip(6).forEach(line -> {
 
+                String [] word = line.split("\\s+");
+
+                String node = word[1];
+                int area = Integer.parseInt(word[2]);
+
+            });
+
+            reader.close();
+
+        }catch (FileNotFoundException e){
+
+            System.out.println("File not found");
+            e.printStackTrace();
+
+        } catch (IOException e) {
+
+            System.out.println("File error");
+            e.printStackTrace();
+        }
     }
+
+
 
     public static void readNets(String fileName){
 
