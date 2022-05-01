@@ -10,8 +10,8 @@ public class BenchmarkReaders {
         try {
 
             BufferedReader reader = new BufferedReader(
-                    new InputStreamReader(
-                            new FileInputStream(filename), Charset.forName(StandardCharsets.UTF_8.name())));
+                                    new InputStreamReader(
+                                    new FileInputStream(filename), Charset.forName(StandardCharsets.UTF_8.name())));
 
             Iterator<String> lineReader = reader.lines().iterator();
             int lineCount = 0;
@@ -32,10 +32,11 @@ public class BenchmarkReaders {
 
                     reader.lines().forEach(line -> {
 
+                        boolean terminal = false;
                         String[] nodeLine = line.split("\\s+");
 
                         if (line.length() > 4 && nodeLine[4].equals("terminal")) {
-                            boolean terminal = true;
+                             terminal = true;
                         }
 
                         String name = nodeLine[1];
