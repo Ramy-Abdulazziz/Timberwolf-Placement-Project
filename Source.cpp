@@ -6,7 +6,6 @@ You can work on finding the total minimum length. Any questions, please email me
 Description: This program initialize the placement by placing all the cells inside the given rectangle.
 Update: Now the program could do perturbation, just need to find the minimum length now
 */
-
 #include <iostream>
 #include <iomanip> 
 #include <stdlib.h>
@@ -46,6 +45,33 @@ void extractIntegerWords(string str, vector<int>& num)
     }
 }
 
+void sortArr_float(vector<float> arr, int n, vector <int>& index)
+{
+    index.clear();
+    // Vector to store element
+    // with respective present index
+    vector<pair<float, float> > vp;
+
+    // Inserting element in pair vector
+    // to keep track of previous indexes
+    for (int i = 0; i < n; ++i) {
+        vp.push_back(make_pair(arr[i], i));
+    }
+
+    // Sorting pair vector
+    sort(vp.begin(), vp.end());
+
+    // Displaying sorted element
+    // with previous indexes
+    // corresponding to each element
+    //cout << "Element\t"
+        //<< "index" << endl;
+    for (int i = 0; i < vp.size(); i++) {
+        //cout << vp[i].first << "\t"
+             //<< vp[i].second << endl;
+        index.push_back(vp[i].second);
+    }
+}
 //use to get the index of descending order of the elements in a vector
 void sortArr(vector<int> arr, int n, vector <int>& index)
 {
@@ -82,7 +108,7 @@ void initialize(vector<vector<string>>& grid, int numNodes, int numRow, int numC
     bool empty = false;
     //initialize loop control variable
     int j = 0, k = 0;
-    srand(time(0));
+    //srand(time(0));
     //place every node
     for (int i = 0; i < numNodes; i++) {
         empty = false;
@@ -142,7 +168,7 @@ void initialize(vector<vector<string>>& grid, int numNodes, int numRow, int numC
     }
 }
 
-void swap_cell(vector<vector<string>> &grid,vector<int> wts, vector<vector<int>> size,int numNodes,vector<vector<int>> coor) {
+void swap_cell(vector<vector<string>> &grid,vector<int> wts, vector<vector<int>> size,int numNodes,vector<vector<int>> &coor,vector<vector<float>> &center_coor) {
     int index1, index2;
     //swap two random nodes
     index1 = rand() % numNodes;
@@ -152,6 +178,10 @@ void swap_cell(vector<vector<string>> &grid,vector<int> wts, vector<vector<int>>
     {
         index2 = rand() % numNodes;
     }
+    swap(center_coor[index1][0], center_coor[index2][0]);
+    swap(center_coor[index1][1], center_coor[index2][1]);
+    swap(coor[index1][0],coor[index2][0]);
+    swap(coor[index1][1], coor[index2][1]);
     //swap two nodes
     for (int i = 0; i < size[index1][1]; i++)
     {
@@ -163,12 +193,12 @@ void swap_cell(vector<vector<string>> &grid,vector<int> wts, vector<vector<int>>
     }
 }
 
-void move_cell(vector<vector<string>> &grid,vector<vector<int>> size,int numNodes, int numRow, int numColumn, vector<vector<int>> coor) {
+void move_cell(vector<vector<string>> &grid,vector<vector<int>> size,int numNodes, int numRow, int numColumn, vector<vector<int>> &coor, vector<vector<float>>& center_coor) {
     int x_coor = 0, y_coor = 0;
     bool empty = false;
     int index;
-    index = rand() / numNodes;
-    index = 22;
+    index = rand() % numNodes;
+   // index = 22;
     while (empty == false)
     {
         x_coor = rand() % numColumn;
@@ -199,6 +229,10 @@ void move_cell(vector<vector<string>> &grid,vector<vector<int>> size,int numNode
                 break;
         }
     }
+    center_coor[index][0] = x_coor + (float(size[index][0]-1)/2);
+    center_coor[index][1] = y_coor + (float(size[index][1] - 1) / 2);
+    coor[index][0] = x_coor;
+    coor[index][0] = y_coor;
         for (int i = 0; i < size[index][1]; i++)
         {
             for (int j = 0; j < size[index][0]; j++)
@@ -208,10 +242,126 @@ void move_cell(vector<vector<string>> &grid,vector<vector<int>> size,int numNode
             }
         }
 }
+
+void get_edge(vector<vector<string>> grid, vector<vector<float>> center_coor,vector<vector<int>>ter_coor,vector<float> &edge, vector<vector<string>> &vertice,vector<vector<string>> nets) 
+{
+    edge.clear();
+    vertice.clear();
+    for (int i = 0; i < nets.size(); i++)
+    {
+        for (int j = 0; j < nets[i].size()-1; j++)
+        {
+            for (int k = j; k < nets[i].size()-1; k++)
+            {
+                float length;
+                float first[2], second[2];
+                vector<string> v1;
+                v1.push_back(nets[i][j]);
+                v1.push_back(nets[i][k + 1]);
+                vertice.push_back(v1);
+                v1.clear();
+                if (nets[i][j].front() == 'a')
+                {
+                    string s1;
+                    s1 = nets[i][j];
+                    s1.erase(0, 1);
+                    first[0] = center_coor[stoi(s1)][0];
+                    first[1] = center_coor[stoi(s1)][1];
+                }
+                else
+                {
+                    string s2;
+                    s2 = nets[i][j];
+                    s2.erase(0, 1);
+                    first[0] = float(ter_coor[stoi(s2)-1][0]);
+                    first[1] = float(ter_coor[stoi(s2)-1][1]);
+                }
+                if (nets[i][k + 1].front() == 'a')
+                {
+                    string s3;
+                    s3 = nets[i][k+1];
+                    s3.erase(0, 1);
+                    second[0] = center_coor[stoi(s3)][0];
+                    second[1] = center_coor[stoi(s3)][1];
+                }
+                else
+                {  
+                    string s4;
+                    s4 = nets[i][k+1];
+                    s4.erase(0, 1);
+                    second[0] = float(ter_coor[stoi(s4)-1][0]);
+                    second[1] = float(ter_coor[stoi(s4)-1][1]);
+                }
+                length = abs(first[0] - second[0]) + abs(first[1] - second[1]);
+                edge.push_back(length);
+            }
+        }
+    }
+
+}
+
+double kruskal_algorithm(vector <float> edge, vector<int> edgeindex, vector<vector<string>> nets,int numNodes,vector<vector<string>> vertice) {
+    vector <int> nodes;
+    vector <float> kruskal_edge;
+    float total_length = 0;
+    int j = 0;
+    //make each node an individual set
+    for (int i = 0; i < numNodes; i++)
+    {
+        nodes.push_back(i);
+    }
+    for (int i = 0; i < edge.size(); i++)
+    {
+        string s1, s2;
+        int edge1, edge2;
+        s1 = vertice[edgeindex[i]][0];
+        s2 = vertice[edgeindex[i]][1];
+        if (s1.front() == 'a')
+        {
+            s1.erase(0, 1);
+            edge1 = stoi(s1) + 246;
+        }
+        else
+        {
+            s1.erase(0, 1);
+            edge1 = stoi(s1) - 1;
+        }
+        if (s2.front() == 'a')
+        {
+            s2.erase(0, 1);
+            edge2 = stoi(s2) + 246;
+        }
+        else
+        {
+            s2.erase(0, 1);
+            edge2 = stoi(s2) -1;
+        }
+        //find the parent index //adapt from website
+        while (nodes[edge1] != edge1)
+            edge1 = nodes[edge1];
+        while (nodes[edge2] != edge2)
+            edge2 = nodes[edge2];
+
+
+        if (nodes[edge1] != nodes[edge2])
+        {
+            nodes[edge1] = nodes[edge2];
+            total_length += edge[edgeindex[i]];
+            j++;
+            if (j == numNodes - 1)
+                break;
+        }
+
+
+    }
+    return total_length;
+}
+
+
 int main() {
     //read all the files
-    ifstream sclfile("mybenchmark.scl");
-    ifstream nodesfile("mybenchmark.nodes");
+    ifstream sclfile("ibm01.scl");
+    ifstream nodesfile("ibm01.nodes");
     ifstream wtsfile("ibm01.wts");
     ifstream plfile("ibm01.pl");
     ifstream netsfile("ibm01.nets");
@@ -220,9 +370,20 @@ int main() {
     vector <int> terminalWt;
     vector <int> nodeWt;
     vector <int> descendingIndex;
+    vector <int> edgeIndex;
     vector <vector<float>> center_coor;
     vector <vector<int>> bot_left_coor;
+    vector <vector<int>> ter_coor;
+    vector <vector<string>> nets;
+    vector <int> nets_length;
+    vector <float> edge;
+    vector <vector<string>> vertice;
+    int numNet, netDegree;
+    double total_length;
+    float temperature = 4000000;
+    float alpha = 0.9;
     int i = 0, numRow = 0, numSite = 0, numNode = 0, numTerminal = 0;
+    vector <double> length_change;
     /*
     read the scl file and get its number of rows and number of columns
     */
@@ -306,7 +467,7 @@ int main() {
     }
     for (int i = 0; i < 5; i++)
     {
-        getline(wtsfile,line);
+        getline(wtsfile, line);
     }
     for (int i = 0; i < numTerminal; i++)
     {
@@ -318,33 +479,95 @@ int main() {
         getline(wtsfile, line);
         extractIntegerWords(line, nodeWt);
     }
+    //read pl file to get the coordinate for terminals
+    for (int i = 0; i < 6; i++)
+    {
+        getline(plfile, line);
+    }
+    for (int i = 0; i < numTerminal; i++)
+    {
+        vector <int> v3;
+        getline(plfile, line);
+        extractIntegerWords(line, v3);
+        ter_coor.push_back(v3);
+        v3.clear();
+    }
+    //read nets file to get the net degree and the net connection
+    for (int i = 0; i < 5; i++)
+    {
+        getline(netsfile, line);
+    }
+    for (int i = 0; i < 1; i++) {
+        vector <int> v4;
+        getline(netsfile, line);
+        extractIntegerWords(line, v4);
+        numNet = v4[0];
+        getline(netsfile, line);
+        v4.clear();
+    }
+    for (int i = 0; i < numNet; i++) {
+        vector<int> v4;
+        vector<string> v5;
+        getline(netsfile, line);
+        extractIntegerWords(line, v4);
+        for (int j = 0; j < v4[0]; j++)
+        {
+            getline(netsfile, line);
+            stringstream ss(line);
+            string first_word;
+            ss >> first_word;
+            v5.push_back(first_word);
+        }
+        nets.push_back(v5);
+        v5.clear();
+        v4.clear();
+    }
+
     //get the descending index of the nodes
     sortArr(nodeWt, nodeWt.size(), descendingIndex);
 
     //initialize the grid
-    initialize(grid, nodes.size(), numRow, numSite, nodes,descendingIndex,center_coor,bot_left_coor);
-    //print the grid
-    for (int j = 0; j < numRow * 16; j++)
+    initialize(grid, nodes.size(), numRow, numSite, nodes, descendingIndex, center_coor, bot_left_coor);
+    //get the edge
+    get_edge(grid, center_coor, ter_coor, edge, vertice, nets);
+    //get teh index of the nodes
+    sortArr_float(edge, edge.size(), edgeIndex);
+    //use kruskal algorithm
+    total_length = kruskal_algorithm(edge, edgeIndex, nets, numNode, vertice);
+    length_change.push_back(total_length);
+    while (temperature > 0.1)
     {
-        for (int k = 0; k < numSite; k++)
+        if (rand() % 2)
         {
-            cout << grid[j][k] << " ";
+            swap_cell(grid, nodeWt, nodes, nodes.size(), bot_left_coor, center_coor);
         }
-        cout << "\n";
+        else
+        {
+            move_cell(grid, nodes, nodes.size(), numRow, numSite, bot_left_coor, center_coor);
+        }
+        double new_length;
+        double delta;
+        //get the edge
+        get_edge(grid, center_coor, ter_coor, edge, vertice, nets);
+        //get teh index of the nodes
+        sortArr_float(edge, edge.size(), edgeIndex);
+        new_length = kruskal_algorithm(edge, edgeIndex, nets, numNode,vertice);
+        delta = total_length - new_length;
+        if (delta > 0)
+        {
+            total_length = new_length;
+            length_change.push_back(total_length);
+        }
+        else if ((float)rand() / RAND_MAX < exp(delta/temperature))
+        {
+            total_length = new_length;
+            length_change.push_back(total_length);
+        }
+        temperature = alpha * temperature;
     }
-    //system("CLS");
-    //swap_cell(grid, nodeWt, nodes, numNode, bot_left_coor);
-    //move_cell(grid, nodes, numNode, numRow, numSite, bot_left_coor);
-   // for (int j = 0; j < numRow * 16; j++)
-  //  {
-   //     for (int k = 0; k < numSite; k++)
-   //     {
-   //         cout << grid[j][k] << " ";
-   //     }
-    //    cout << "\n";
-    //}
-
 }
+
+
 
 
 
